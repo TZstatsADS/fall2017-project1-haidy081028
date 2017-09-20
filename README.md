@@ -25,7 +25,7 @@ proj/
 
 ##  What words did presidents usually say?
 ###  Inspect an overall wordcloud
-![image](haidy081028.github.com/figs/word cloud.png)
+![image](https://github.com/TZstatsADS/fall2017-project1-haidy081028/tree/master/figs/word cloud.png)
 
 We could get a general sense about what U.S. presidents talked about during their inauguration. We wil focus on a smaller subset of the 17 presidents who served more than once in our next step. 
 
