@@ -24,4 +24,7 @@ proj/
 └── output/
 ```
 
-Please see each subfolder for a README file.
+##  What words did presidents usually say?
+###  Inspect an overall wordcloud
+![image](figs/title.jpg)
+We could get a general sense about what U.S. presidents talked about during their inauguration. We wil focus on a smaller subset of the 17 presidents who served more than once in our next step. 
