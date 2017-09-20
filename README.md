@@ -2,7 +2,6 @@
 # Project 1: Did US Presidents Change Speaking Styles During their Second Inauguration?
 
 ![image](figs/title.jpg)
-
 ### [Project Description](doc/)
 This is the first and only *individual* (as opposed to *team*) this semester. 
 
@@ -26,7 +25,8 @@ proj/
 
 ##  What words did presidents usually say?
 ###  Inspect an overall wordcloud
-![image](.../figs/word cloud.png)
+![image](haidy081028.github.com/figs/word cloud.png)
+
 We could get a general sense about what U.S. presidents talked about during their inauguration. We wil focus on a smaller subset of the 17 presidents who served more than once in our next step. 
 
 ### Inspect Word clouds for first vs. second term inaugural speeches
