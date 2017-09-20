@@ -8,7 +8,6 @@ This is the first and only *individual* (as opposed to *team*) this semester.
 
 Term: Fall 2017
 
-+ Projec title: Lorem ipsum dolor sit amet
 + This project is conducted by Xinyao Guo(xg2257)
 
 + Project summary: The inauguration speeches are one of the most popular topics to do speech analysis. In this project, we will look at those president who served more than one term and apply text mining as well as natural language processing to analyze their first two inaugural speeches. This report will focus on analyzing inaugural speeaches based on word, sentence, emotion and readability analysis.
