@@ -3,3 +3,474 @@
 
 The output directory contains analysis output, processed datasets, logs, or other processed things.
 
+---
+title: "Did US Presidents Change Speaking Styles During their Second Inauguration?"
+author: "Xinyao Guo (xg2257)"
+output: html_document
+---
+
+The inauguration speeches are one of the most popular topics to do speech analysis. In this project, we will look at those president who served more than one term and apply text mining as well as natural language processing to analyze their first two inaugural speeches. This report will focus on analyzing inaugural speeaches based on word, sentence, emotion and readability analysis.
+
+#Step 0 - Install and load libraries
+```{r, message=FALSE, warning=FALSE}
+packages.used=c("tm", "wordcloud", "SnowballC","RColorBrewer", 
+                "dplyr", "tydytext","qdap","syuzhet","beeswarm","scales","gplots","factoextra","koRpus")
+
+# check packages that need to be installed.
+packages.needed=setdiff(packages.used, 
+                        intersect(installed.packages()[,1], 
+                                  packages.used))
+# install additional packages
+if(length(packages.needed)>0){
+  install.packages(packages.needed, dependencies = TRUE,
+                   repos='http://cran.us.r-project.org')
+}
+
+library(tm)
+library(wordcloud)
+library(RColorBrewer)
+library(dplyr)
+library(tidytext)
+library(SnowballC)
+library(qdap)
+library(syuzhet)
+library(beeswarm)
+library(scales)
+library(gplots)
+library(factoextra)
+library(koRpus) 
+```
+This notebook was prepared with the following environmental settings.
+
+```{r}
+print(R.version)
+```
+
+#Step 1 - Read in speeches
+##Find presidents who served more than 1 term
+```{r,warning=FALSE}
+setwd("C:/Users/haidy081028/Desktop/Fall 2017/ADS/data/InauguralSpeeches")
+folder.path="C:/Users/haidy081028/Desktop/Fall 2017/ADS/data/InauguralSpeeches"
+speeches=list.files(path = folder.path, pattern = "*.txt")
+#president who have served more than once:
+second<-list.files(path = folder.path, pattern = "*-2.txt")
+first<-gsub('-2',replacement = '-1',x=second)
+first<-gsub('-II',replacement = '-I',x=first)
+prex.out.more=substr(first, 6, nchar(first)-6)
+prex.out.more<-gsub('-I',replacement = '',x=prex.out.more)
+#read all speeches:
+all_speeches<-list()
+for (i in speeches) {
+  text <- readLines(i)
+  all_speeches <- append(all_speeches, text)
+}
+all_speeches<-all_speeches[sapply(all_speeches, nchar) > 0]
+all_speeches<-unlist(all_speeches)
+#read speeches of first term:
+first_speeches<-list()
+for (i in first) {
+  text <- readLines(i)
+  first_speeches <- append(first_speeches, text)
+}
+first_speeches<-first_speeches[sapply(first_speeches, nchar) > 0]
+first_speeches<-unlist(first_speeches)
+#read speech of second term:
+second_speeches<-list()
+for (i in second) {
+  text <- readLines(i)
+  second_speeches <- append(second_speeches, text)
+}
+second_speeches<-second_speeches[sapply(second_speeches, nchar) > 0]
+second_speeches<-unlist(second_speeches)
+```
+
+#Step 2 - What words did presidents usually say?
+##Step 2.1 - Inspect an overall wordcloud
+```{r, fig.height=6, fig.width=10,echo=FALSE,warning=FALSE}
+#Text processing:
+ff.all<-Corpus(DirSource(folder.path))
+ff.all<-tm_map(ff.all, stripWhitespace)
+ff.all<-tm_map(ff.all, content_transformer(tolower))
+ff.all<-tm_map(ff.all, removeWords, stopwords("english"))
+ff.all<-tm_map(ff.all, removeWords, character(0))
+ff.all<-tm_map(ff.all, removePunctuation)
+tdm.all<-TermDocumentMatrix(ff.all)    
+tdm.tidy=tidy(tdm.all)
+tdm.overall=summarise(group_by(tdm.tidy, term), sum(count))
+#visualize overall speeches using wordcloud:
+wordcloud(tdm.overall$term, tdm.overall$`sum(count)`,
+          scale=c(5,0.5),
+          max.words=100,
+          min.freq=1,
+          random.order=FALSE,
+          rot.per=0.3,
+          use.r.layout=T,
+          random.color=FALSE,
+          colors=brewer.pal(9,"Dark2"))
+```
+
+We could get a general sense about what U.S. presidents talked about during their inauguration. We wil focus on a smaller subset of the 17 presidents who served more than once in our next step. 
+
+##Step 2.2 - Inspect Word clouds for first vs. second term inaugural speeches
+```{r,fig.height=6, fig.width=10,echo=FALSE,warning=FALSE}
+par(mfrow=c(1,2))
+##word cloud for first speech:
+wordbag = Corpus(VectorSource(first_speeches))
+# Convert the text to lower case:
+wordbag <- tm_map(wordbag, content_transformer(tolower))
+# Remove english common stopwords:
+wordbag <- tm_map(wordbag, removeWords, stopwords("english"))
+# Remove punctuations:
+wordbag <- tm_map(wordbag, removePunctuation)
+# Eliminate extra white spaces:
+wordbag <- tm_map(wordbag, stripWhitespace)
+# Text stemming:
+dtm <- TermDocumentMatrix(wordbag)
+m <- as.matrix(dtm)
+v <- sort(rowSums(m),decreasing=TRUE)
+d1 <- data.frame(word = names(v),freq=v)
+#visualize:
+set.seed(1234)
+wordcloud(words = d1$word, freq = d1$freq, min.freq = 1,
+          max.words=100, random.order=FALSE, rot.per=0.35, 
+          colors=brewer.pal(8, "Dark2"))
+
+##Word cloud for second speeches:
+wordbag = Corpus(VectorSource(second_speeches))
+# Convert the text to lower case:
+wordbag <- tm_map(wordbag, content_transformer(tolower))
+# Remove english common stopwords:
+wordbag <- tm_map(wordbag, removeWords, stopwords("english"))
+# Remove punctuations:
+wordbag <- tm_map(wordbag, removePunctuation)
+# Eliminate extra white spaces:
+wordbag <- tm_map(wordbag, stripWhitespace)
+# Text stemming:
+dtm <- TermDocumentMatrix(wordbag)
+m <- as.matrix(dtm)
+v <- sort(rowSums(m),decreasing=TRUE)
+d2 <- data.frame(word = names(v),freq=v)
+#visualize:
+set.seed(1234)
+wordcloud(words = d2$word, freq = d2$freq, min.freq = 1,
+          max.words=100, random.order=FALSE, rot.per=0.35, 
+          colors=brewer.pal(8, "Dark2"))
+```
+
+The two pictures do not look very different from the first overall word cloud, which is a good thing since the 17 presidents we picked are not outliers.
+
+By comparing these two word clouds, we could get a sense that several new words appeared in the second-term speeches whereas some others disappear. To better inspect on individual words, we will take a look at the summary of top used words in the next step.
+
+##Step 2.3 - Find the most frequent words
+```{r,fig.height=6, fig.width=10,echo=FALSE}
+#find the top 20 words in speeches:
+output<-as.data.frame(cbind(head(d1,20),head(d2,20)),row.names = 1:20)
+output
+#visualize the top 10 words using barplot:
+par(mfrow=c(1,2))
+barplot(d1[1:10,]$freq, names.arg = d1[1:10,]$word, cex.names=0.6,las=2,  
+        main ="Frequent words in first speech",
+        ylab = "Word frequencies")
+barplot(d2[1:10,]$freq, names.arg = d2[1:10,]$word, cex.names=0.6,las=2,  
+        main ="Frequent words in second speech",
+        ylab = "Word frequencies")
+```
+
+We can see some words became more popular in the second speeches: "new", "peace", "freedom", "war". In the meantime, some words like "country" and "public" lost their popularity. Soley based on this finding, we could make a guess that presidents were more concerned with bigger/worldwide problems during their second term. This is consistent with them being voted for the second time and became more confident in making a bigger influence in the whole world.
+
+#Step 3 - Sentences Analysis
+##Sentence length in first vs. second term speeches:
+```{r,warning=FALSE}
+setwd("C:/Users/haidy081028/Desktop/Fall 2017/ADS/data/InauguralSpeeches")
+###First Term
+speech.list.first = NULL
+for(i in 1:length(first)){
+  sp = paste(readLines(first[i],n=-1, skipNul=TRUE),collapse=" ")
+  speech.list.first  = c(speech.list.first,sp)
+}
+speech.list.first = data.frame(fulltext = speech.list.first)
+rownames(speech.list.first)<-prex.out.more
+# Detect and split sentences on endmarks:
+sentence.list.first=NULL
+for(i in 1:nrow(speech.list.first)){
+  sentences.first=sent_detect(speech.list.first$fulltext[i],
+                              endmarks = c("?", ".", "!", "|",";"))
+  # Call NRC sentiment dictionary to calculate emotions:
+  if(length(sentences.first)>0){
+    emotions=get_nrc_sentiment(sentences.first)
+    word.count=word_count(sentences.first)
+    # in case the word counts are zeros?
+    emotions=diag(1/(word.count+0.01))%*%as.matrix(emotions)
+    sentence.list.first=rbind(sentence.list.first, 
+                              cbind(speech.list.first[i,-ncol(speech.list.first)],
+                                    sentences.first=as.character(sentences.first), 
+                                    word.count,
+                                    emotions,
+                                    sent.id=1:length(sentences.first), File = prex.out.more[i],
+                                    Term = 1
+                              )
+    )
+  }
+}
+
+# some non-sentences exist in raw data due to erroneous extra end-of sentence marks:
+sentence.list.first=
+  sentence.list.first%>%
+  filter(!is.na(word.count)) 
+
+sentence.list.first$File= factor(sentence.list.first$File)
+
+sentence.list.first$FileOrdered=reorder(sentence.list.first$File, 
+                                        sentence.list.first$word.count, 
+                                        mean, 
+                                        order=T)
+par(mfrow=c(1,2),
+    mar = c(5,7,2,2))
+# Create a bee swarm plot for the word number in each sentence for first-term speeches:
+beeswarm(word.count~FileOrdered, 
+         data=sentence.list.first,
+         horizontal = TRUE, 
+         pch=16, col=alpha(brewer.pal(9, "Set1"), 0.6), 
+         cex=0.55, cex.axis=0.8, cex.lab=0.8,
+         spacing=5/nlevels(sentence.list.first$FileOrdered),
+         las=2, xlab="Number of words in a sentence", ylab="",
+         main="First Inaugural speeches")
+
+###Second Term
+speech.list.second = NULL
+for(i in 1:length(second)){
+  sp = paste(readLines(second[i],n=-1, skipNul=TRUE),collapse=" ")
+  speech.list.second  = c(speech.list.second,sp)
+}
+speech.list.second = data.frame(fulltext = speech.list.second)
+rownames(speech.list.second)<-prex.out.more
+# Detect and split sentences on endmarks:
+sentence.list.second=NULL
+for(i in 1:nrow(speech.list.second)){
+  sentences.second=sent_detect(speech.list.second$fulltext[i],
+                               endmarks = c("?", ".", "!", "|",";"))
+  
+  # Call NRC sentiment dictionary to calculate emotions:
+  # Count word numbers for each sentence
+  if(length(sentences.second)>0){
+    emotions=get_nrc_sentiment(sentences.second)
+    word.count=word_count(sentences.second)
+    # in case the word counts are zeros?
+    emotions=diag(1/(word.count+0.01))%*%as.matrix(emotions)
+    sentence.list.second=rbind(sentence.list.second, 
+                               cbind(speech.list.second[i,-ncol(speech.list.second)],
+                                     sentences.second=as.character(sentences.second), 
+                                     word.count,
+                                     emotions,
+                                     sent.id=1:length(sentences.second), File = prex.out.more[i],
+                                     Term = 1
+                               )
+    )
+  }
+}
+
+# some non-sentences exist in raw data due to erroneous extra end-of sentence marks
+sentence.list.second=
+  sentence.list.second%>%
+  filter(!is.na(word.count)) 
+
+sentence.list.second$File= factor(sentence.list.second$File)
+
+sentence.list.second$FileOrdered=reorder(sentence.list.second$File, 
+                                         sentence.list.second$word.count, 
+                                         mean, 
+                                         order=T)
+
+# Create a bee swarm plot for the word number in each sentence for second-term speeches:
+beeswarm(word.count~FileOrdered, 
+         data=sentence.list.second,
+         horizontal = TRUE, 
+         pch=16, col=alpha(brewer.pal(9, "Set1"), 0.6), 
+         cex=0.55, cex.axis=0.8, cex.lab=0.8,
+         spacing=5/nlevels(sentence.list.second$FileOrdered),
+         las=2, xlab="Number of words in a sentence", ylab="",
+         main="Second Inaugural speeches")
+```
+
+We ordered the plots by sentences lengh. We can see from the plots that James Monroe, Richard Nixon, George W. Bush used longer sentences in the second speech; William McKinley used shorter sentences in the second speech. One interesing finding is that George Washington, Andrew Jackson and Grover Cleveland used the longest sentences in both terms. We will further analyze and try to explain this finding by looking at the emotions expressed as well as the grade level of speeches.
+
+#Step 4 - Sentiment Analysis
+##Step 4.1 - Emotions Comparison
+```{r,echo=FALSE,warning=FALSE}
+setwd("C:/Users/haidy081028/Desktop/Fall 2017/ADS/data/InauguralSpeeches")
+#Bulid functions to obtain emotions:
+emotion.get<-function(text) {
+  sentence.list<-NULL
+  sentences=sent_detect(text,
+                        endmarks = c("?", ".", "!", "|",";"))
+  if(length(sentences)>0){
+    word.count=word_count(sentences)
+    emotions=get_nrc_sentiment(sentences)
+    emotions=diag(1/(word.count+0.01))%*%as.matrix(emotions)
+  }
+  return(emotions)
+}
+
+emotion.list.first<-apply(speech.list.first,1,emotion.get)
+names(emotion.list.first)<-prex.out.more
+
+emotion.total.first<-sapply(emotion.list.first,colSums,na.rm=T)
+emotion.total.first<-t(emotion.total.first)
+
+emotion.list.second<-apply(speech.list.second,1,emotion.get)
+names(emotion.list.second)<-prex.out.more
+
+emotion.total.second<-sapply(emotion.list.second,colSums,na.rm=T)
+emotion.total.second<-t(emotion.total.second)
+# Create a comparison bar plot for mean value of the clustering of emotions:
+emo.means.first=colMeans(select(sentence.list.first, anger:trust)>0.01)
+emo.means.second=colMeans(select(sentence.list.second, anger:trust)>0.01)
+emo.mean<-rbind(emo.means.first,emo.means.second)
+barplot(emo.mean[2:1,],names.arg = colnames(emo.mean),beside=TRUE,col=c("Orange","LightGreen"),border = NA,cex.names=0.8,las=2,horiz=T,main="Sentiment Comparison")
+legend("bottomright", 
+       legend = c("First", "Second"), 
+       fill = c("LightGreen","Orange"), ncol = 2,bty="n",
+       cex = 0.7)
+# Create heat maps of sentences for each president in first vs. second-term speeches:
+par(mar=c(2, 6, 6, 6),mfrow=c(1,1))
+heatmap.2(emotion.total.first[,c(1:8)],
+          scale = "none", key=T, 
+          margins = c(7, 7),
+          trace = "none", density.info = "none",main="First Heatmap")
+heatmap.2(emotion.total.second[,c(1:8)],
+          scale = "none", key=T, 
+          margins = c(7, 7),
+          trace = "none", density.info = "none",main="Second Heatmap")
+```
+
+From the barplot and the heat maps, we can see almost every president emphasized on expressing the emotion of trust. This make sense since they want the genreal public be willing to follow them. Aside from trust, positive emotions like anticipation and joy are common in inaugural speeches. From the comparison between heat maps, we can tell presidents changed their emotional expressions from their first to second inauguration moderately. 
+
+##Step 4.2 - Clustering based on Sentiment Analysis
+```{r,warning=FALSE}
+# Summarize the mean values of clustering emotions as a data frame
+###First term
+presid.summary.first=tbl_df(sentence.list.first)%>%
+  group_by(File)%>%
+  summarise(
+    anger=mean(anger),
+    anticipation=mean(anticipation),
+    disgust=mean(disgust),
+    fear=mean(fear),
+    joy=mean(joy),
+    sadness=mean(sadness),
+    surprise=mean(surprise),
+    trust=mean(trust)
+  )
+presid.summary.first=as.data.frame(presid.summary.first)
+rownames(presid.summary.first)=as.character((presid.summary.first[,1]))
+###Second-term
+presid.summary.second=tbl_df(sentence.list.second)%>%
+  group_by(File)%>%
+  summarise(
+    anger=mean(anger),
+    anticipation=mean(anticipation),
+    disgust=mean(disgust),
+    fear=mean(fear),
+    joy=mean(joy),
+    sadness=mean(sadness),
+    surprise=mean(surprise),
+    trust=mean(trust)
+  )
+presid.summary.second=as.data.frame(presid.summary.second)
+rownames(presid.summary.second)=as.character((presid.summary.second[,1]))
+# Perform k-means clustering on emotions data frame
+# Clustering emotions into 3 groups 
+# Create ggplots based on clustering emotions
+###First term
+km.res.first=kmeans(presid.summary.first[,-1], iter.max=200,
+                    3)
+fviz_cluster(km.res.first, 
+             stand=F, repel= TRUE,
+             data = presid.summary.first[,-1], xlab="", xaxt="n",
+             show.clust.cent=FALSE, main="First Clusters")
+###Second term
+km.res.second=kmeans(presid.summary.second[,-1], iter.max=200,
+                     3)
+set.seed(1234)
+fviz_cluster(km.res.second, 
+             stand=F, repel= TRUE,
+             data = presid.summary.second[,-1], xlab="", xaxt="n",
+             show.clust.cent=FALSE,main="Second Clusters")
+```
+
+```{r}
+#Who is the most positive/negative one?
+#most positive:
+which.max(emotion.total.first[,10])
+which.max(emotion.total.second[,10])
+#most negative:
+which.max(emotion.total.first[,9])
+which.max(emotion.total.second[,9])
+```
+
+According to the output, the most positive presidents are Dwight D.Eisenhower and Ronald Reagan. The most negative presidents are Abraham Lincoln and Franklin Roosevelt.
+
+To get a better understanding of who expressed similar emotions, we can take a look at the clustering plots. In terms of the first-term inaugural speeaches, every president as fitted in one of the three clusters according to their use of emotions, and the three clusters are fairly distinct. However in the second-term speech, two of the clusters have some overlap and George Washington seems to be an outlier who did not belong to any of the cluster. To verify this, I also changed the number of clusters (k) to 4 and 5, George Washington still seems to be far apart from others. Next, let's do further analysis on readability to see if the level of readability score changes and to see if George Washington is really an outlier.
+
+#Step 5 - Readability Analysis
+Readability is an approximation of the ease with which a reader parses and comprehends text. We can see the scores as grade levels. We are interested in each president's grade level or the difficult level of their speeches. To quantify readility scores, we use the Automated Readability Index(ARI) built in the koRpus pacakge.
+```{r,warning=FALSE}
+setwd("C:/Users/haidy081028/Desktop/Fall 2017/ADS/data/InauguralSpeeches")
+#Tokenize the first inaugural speeches:
+#tagged.text <- tokenize(first_speeches, format="obj", lang="en")
+#out<-ARI(tagged.text)
+###First term:
+names(first)<-prex.out.more
+ll.tagged.first <- lapply(first, tokenize, lang="en") 
+ll.ARI.first<-lapply(ll.tagged.first,ARI)   
+ll.first<-as.list(ll.ARI.first)
+out.first<-c()
+for (i in prex.out.more){
+  out.first[i]<-ll.first[[i]]@ARI$grade
+}
+
+###Second Term:
+names(second)<-prex.out.more
+ll.tagged.second <- lapply(second, tokenize, lang="en") 
+ll.ARI.second<-lapply(ll.tagged.second,ARI)   
+ll.second<-as.list(ll.ARI.second)
+out.second<-c()
+for (i in prex.out.more){
+  out.second[i]<-ll.second[[i]]@ARI$grade
+}
+
+read.first<-as.data.frame(out.first)
+read.second<-as.data.frame(out.second)
+read.scores<-cbind(read.first,read.second)
+read.scores<-read.scores[order(read.scores$out.first,decreasing = T),]
+#visualize:
+par(mar=c(2, 6, 2, 2),mfrow=c(1,1))
+barplot(t(read.scores[,2:1]), names.arg=rownames(read.scores),  beside=TRUE,horiz = TRUE,cex.names=0.6,las=2,col=c("Orange","LightGreen"),border = NA,main="Readability Scores",xlim = c(0,25))
+
+legend("topright", 
+       legend = c("First", "Second"), 
+       fill = c("LightGreen","Orange"), ncol = 2,
+       cex = 0.5)
+#average readability scores for the first vs. second term:
+mean(out.first); mean(out.second)
+```
+
+From the output, the readability score of George Washington decreases significantly. This might explain the fact that he was an outlier in terms of sentiment clustering. We can see that George Washington, Andrew Jackson and Richard Nixon's readability scores vary a lot from their first to second term inauguration speech. 
+
+Overall, the average readability score did not change much, which indicates most presidents did not change their speaking styles a lot from their first term inaugration.
+
+#Conclusion
+We analyzed the inaugural speeches for the U.S presidents who served more than one term. In terms of words, we could see that on average, presidents had wider perspective and became more confident in delivering speeches.
+
+In terms of sentences, most presidents sticked to similar sentences length from the first speech. Several changed their speaking styles by using longer or shorter sentences. George Washington, Andrew Jackson and Grover Cleveland used the longest sentences in both terms.
+
+In terms of emotion, the most popular emotion that almost every president emphasized is trust. Aside from trust, presidents tended to  changed their speaking styles by changing their emotions moderately. One interesting finding is that George Washington was very different from others during his second inaugural speech. 
+
+In terms of readability, most presidents did not have a very different readability score as compared to their scores for the first term. George Washington had the highest score in his firt speech but it decreased significantly during his second speech. In addition, Andrew Jackson, Grover Cleveland and James Madison have high readability scores, which is also consistent with the fact that these people use the longest sentences.
+
+Therefore, presidents change their speaking styles in terms of word choice, perhaps due to the contemporary issues around the world. In terms of sentence length, emotion expression and readability, most presidents did not change their speaking style much since these might be deep-rooted in one's speaking habit. However, George Washington seems to be a special case. 
+
+
+##References 
+http://www.sthda.com/english/wiki/text-mining-and-word-cloud-fundamentals-in-r-5-simple-steps-you-should-know
+http://anythingbutrbitrary.blogspot.com/2014/01/statistics-meets-rhetoric-text-analysis.html
