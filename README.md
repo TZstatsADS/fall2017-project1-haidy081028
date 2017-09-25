@@ -24,12 +24,12 @@ proj/
 
 ##  What words did presidents usually say?
 ###  Inspect an overall wordcloud
-![image](figs/word cloud.png)
+![image](figs/overallwordcloud.jpeg)
 
 We could get a general sense about what U.S. presidents talked about during their inauguration. We wil focus on a smaller subset of the 17 presidents who served more than once in our next step. 
 
 ### Inspect Word clouds for first vs. second term inaugural speeches
-![image](figs/word cloud comparison.png)
+![image](figs/wordcloudcompare.jpeg)
 
 The two pictures do not look very different from the first overall word cloud, which is a good thing since the 17 presidents we picked are not outliers.
 
