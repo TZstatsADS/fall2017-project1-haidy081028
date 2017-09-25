@@ -36,20 +36,20 @@ The two pictures do not look very different from the first overall word cloud, w
 By comparing these two word clouds, we could get a sense that several new words appeared in the second-term speeches whereas some others disappear. To better inspect on individual words, we will take a look at the summary of top used words in the next step.
 
 ### Find the most frequent words
-![image](figs/most frequent words.png)
+![image](figs/mostfreqwords.jpeg)
 
 We can see some words became more popular in the second speeches: "new", "peace", "freedom", "war". In the meantime, some words like "country" and "public" lost their popularity. Soley based on this finding, we could make a guess that presidents were more concerned with bigger/worldwide problems during their second term. This is consistent with them being voted for the second time and became more confident in making a bigger influence in the whole world.
 
 ## Sentences Analysis
 ### Sentence length in first vs. second term speeches:
-![image](figs/sentence length.png)
+![image](figs/length.jpeg)
 We ordered the plots by sentences lengh. We can see from the plots that James Monroe, Richard Nixon, George W. Bush used longer sentences in the second speech; William McKinley used shorter sentences in the second speech. One interesing finding is that George Washington, Andrew Jackson and Grover Cleveland used the longest sentences in both terms. We will further analyze and try to explain this finding by looking at the emotions expressed as well as the grade level of speeches.
 
 ## Sentiment Analysis
 ### Emotions Comparison
 ![image](figs/sentiment comparison.png)
-![image](figs/first heatmap.png)
-![image](figs/second heatmap.png)
+![image](figs/firstheatmap.jpeg)
+![image](figs/secondheatmap.jpeg)
 
 From the barplot and the heat maps, we can see almost every president emphasized on expressing the emotion of trust. This make sense since they want the genreal public be willing to follow them. Aside from trust, positive emotions like anticipation and joy are common in inaugural speeches. From the comparison between heat maps, we can tell presidents changed their emotional expressions from their first to second inauguration moderately. 
 
@@ -63,7 +63,7 @@ To get a better understanding of who expressed similar emotions, we can take a l
 
 ## Readability Analysis
 Readability is an approximation of the ease with which a reader parses and comprehends text. We can see the scores as grade levels. We are interested in each president's grade level or the difficult level of their speeches. To quantify readility scores, we use the Automated Readability Index(ARI) built in the koRpus pacakge.
-![image](figs/readability scores.png)
+![image](figs/readscores.jpeg)
 
 From the output, the readability score of George Washington decreases significantly. This might explain the fact that he was an outlier in terms of sentiment clustering. We can see that George Washington, Andrew Jackson and Richard Nixon's readability scores vary a lot from their first to second term inauguration speech. 
 
