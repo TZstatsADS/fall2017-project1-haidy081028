@@ -47,15 +47,15 @@ We ordered the plots by sentences lengh. We can see from the plots that James Mo
 
 ## Sentiment Analysis
 ### Emotions Comparison
-![image](figs/sentiment comparison.png)
+![image](figs/sentcompare.jpeg)
 ![image](figs/firstheatmap.jpeg)
 ![image](figs/secondheatmap.jpeg)
 
 From the barplot and the heat maps, we can see almost every president emphasized on expressing the emotion of trust. This make sense since they want the genreal public be willing to follow them. Aside from trust, positive emotions like anticipation and joy are common in inaugural speeches. From the comparison between heat maps, we can tell presidents changed their emotional expressions from their first to second inauguration moderately. 
 
 ### Clustering based on Sentiment Analysis
-![image](figs/first cluster.png)
-![image](figs/second cluster.png)
+![image](figs/firstcluster.jpeg)
+![image](figs/secondcluster.jpeg)
 
 According to the output, the most positive presidents are Dwight D.Eisenhower and Ronald Reagan. The most negative presidents are Abraham Lincoln and Franklin Roosevelt.
 
